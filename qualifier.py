@@ -28,15 +28,15 @@ class ArticleField:
     def __set_name__(self, owner, name):
         self.name = name
 
-    def __set__(self, obj, val):
-        if isinstance(val, self.field_type):
-            self.values[obj] = val
+    def __set__(self, obj, value):
+        if isinstance(value, self.field_type):
+            self.values[obj] = value
         else:
             raise TypeError(
-                f"expected an instance of type '{self.field_type.__name__}' for attribute '{self.name}', got '{type(val).__name__}' instead"
+                f"expected an instance of type '{self.field_type.__name__}' for attribute '{self.name}', got '{type(value).__name__}' instead"
             )
 
-    def __get__(self, obj, o):
+    def __get__(self, obj, owner):
         return self.values[obj]
 
 
@@ -87,7 +87,11 @@ class Article:
             return self.short_introduction(n_characters - 1)
 
     def most_common_words(self, n_words: int):
-        words = {}
+        result = {}
+        if n_words < 0:
+            return result
+
+        # Get rid of non-alphabet characters
         content_non_ascii = ""
         for char in self.content.lower():
             if char in "qwertyuiopasdfghjklzxcvbnm ":
@@ -95,25 +99,26 @@ class Article:
             else:
                 content_non_ascii += " "
 
-        spl = content_non_ascii.split()
-        maxw = 0
-        curr = 0
-        set_spl = []
-        for word in spl:
-            if not word in set_spl:
-                set_spl.append(word)
+        words = content_non_ascii.split()
+        max_value, current_value = 0, 0
 
-        if n_words > len(set_spl):
-            n_words = len(set_spl)
+        # Create list without word duplicates
+        ordered_words = []
+        for word in words:
+            if not word in ordered_words:
+                ordered_words.append(word)
+
+        if n_words > len(ordered_words):
+            n_words = len(ordered_words)
 
         for i in range(n_words):
-            for word in set_spl:
-                c = spl.count(word)
-                if c > maxw:
-                    curr = word
-                    maxw = c
-            set_spl.remove(curr)
-            words[curr] = maxw
-            maxw = 0
+            for word in ordered_words:
+                count = words.count(word)
+                if count > max_value:
+                    current_value = word
+                    max_value = count
+            ordered_words.remove(current_value)
+            result[current_value] = max_value
+            max_value = 0
 
-        return words
+        return result
