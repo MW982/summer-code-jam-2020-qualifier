@@ -21,7 +21,23 @@ class ArticleField:
     """The `ArticleField` class for the Advanced Requirements."""
 
     def __init__(self, field_type: typing.Type[typing.Any]):
-        pass
+        self.field_type = field_type
+        self.name = ""
+        self.values = {}
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __set__(self, obj, val):
+        if isinstance(val, self.field_type):
+            self.values[obj] = val
+        else:
+            raise TypeError(
+                f"expected an instance of type '{self.field_type.__name__}' for attribute '{self.name}', got '{type(val).__name__}' instead"
+            )
+
+    def __get__(self, obj, o):
+        return self.values[obj]
 
 
 class Article:
@@ -40,14 +56,11 @@ class Article:
         Article.counter += 1
         self.id = Article.counter
 
-    @property
-    def content(self):
-        return self._content
+    def __gt__(self, article):
+        return self.publication_date > article.publication_date
 
-    @content.setter
-    def content(self, value):
-        self._content = value
-        self.last_edited = datetime.datetime.now()
+    def __eq__(self, article):
+        return self.publication_date == article.publication_date
 
     def __lt__(self, article):
         return self.publication_date < article.publication_date
@@ -57,6 +70,15 @@ class Article:
 
     def __len__(self):
         return len(self.content)
+
+    @property
+    def content(self):
+        return self._content
+
+    @content.setter
+    def content(self, value):
+        self._content = value
+        self.last_edited = datetime.datetime.now()
 
     def short_introduction(self, n_characters: int):
         if self.content[n_characters] in " \n":
@@ -95,40 +117,3 @@ class Article:
             maxw = 0
 
         return words
-
-
-# fairytale1 = Article(
-#     title="The emperor's new clothes",
-#     author="Hans Christian Andersen",
-#     content="'But he has nothing at all on!' at last cried out all the people. The Emperor was vexed, for he knew that the people were right.",
-#     publication_date=datetime.datetime(1837, 4, 7, 12, 15, 0),
-# )
-# fairytale1.attribute = "lmao"
-# print(fairytale1.id)
-
-# fairytale2 = Article(
-#     title="The emperor's new clothes",
-#     author="Hans Christian Andersen",
-#     content="'But he has nothing at all on!' at last cried out all the people. The Emperor was vexed, for he knew that the people were right.",
-#     publication_date=datetime.datetime(1837, 4, 7, 12, 15, 0),
-# )
-# print(fairytale2.id)
-
-
-# fairytale3 = Article(
-#     title="The emperor's new clothes",
-#     author="Hans Christian Andersen",
-#     content="'But he has nothing at all on!' at last cried out all the people. The Emperor was vexed, for he knew that the people were right.",
-#     publication_date=datetime.datetime(1837, 4, 7, 12, 15, 0),
-# )
-# fairytale3.attribute = "lmao"
-# print(fairytale3.id)
-
-# fairytale4 = Article(
-#     title="The emperor's new clothes",
-#     author="Hans Christian Andersen",
-#     content="'But he has nothing at all on!' at last cried out all the people. The Emperor was vexed, for he knew that the people were right.",
-#     publication_date=datetime.datetime(1837, 4, 7, 12, 15, 0),
-# )
-# print(fairytale4.id)
-# print(fairytale4.most_common_words(5111))
